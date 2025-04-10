@@ -12,6 +12,13 @@ DEBUG = False
 def log(*a, **kw):
     pass
 
+class TypeCheckError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+    def __str__(self):
+        return self.message
+
 
 if DEBUG:
 
@@ -158,12 +165,13 @@ class TypeOperator:
 
     def __str__(self):
         match self.types:
-            case 0:
-                return self.name()
+            case []:
+                return self.name
             case [l, r]:
                 return f"({l} {self.name} {r})"
             case _:
-                return f"{self.name}{' '.join(self.types)}"
+                sep = f' {self.name} '
+                return '(' + sep.join(map(str, self.types)) + ')'
 
     def __repr__(self):
         return str(self)
@@ -175,6 +183,13 @@ class TypeOperator:
 class Function(TypeOperator):
     def __init__(self, from_type, to_type):
         super().__init__("->", from_type, to_type)
+
+    @staticmethod
+    def make(arg_types, ret_type):
+        F = ret_type
+        for arg in reversed(arg_types):
+            F = Function(arg, F)
+        return F
 
 
 IntType = TypeOperator("int")
@@ -223,7 +238,7 @@ class TypeCheck:
             return self.deep_copy_with_new_generic_typevars(
                 val, concrete_types
             )
-        raise RuntimeError(f"Undefined symbol: {name}")
+        raise TypeCheckError(f"Undefined symbol: {name}")
 
     @logwrap
     def deep_copy_with_new_generic_typevars(
@@ -303,7 +318,7 @@ class TypeCheck:
             case TypeVariable():
                 if expr1 != expr2:
                     if self.is_sub_type_expression_of(expr1, expr2):
-                        raise RuntimeError(
+                        raise TypeCheckError(
                             f"Recursive unification when trying to unify these types: {expr1} {expr2}"
                         )
                     expr1.assign(expr2)
@@ -316,7 +331,7 @@ class TypeCheck:
                         log(n1, ts1)
                         log(n2, ts2)
                         if n1 != n2 or len(ts1) != len(ts2):
-                            raise RuntimeError(f"Type mismatch: {expr1} {expr2}")
+                            raise TypeCheckError(f"Type mismatch: {expr1} {expr2}")
                         for subtype1, subtype2 in zip(ts1, ts2):
                             self.unify_type_expressions(subtype1, subtype2)
             case _:
@@ -334,13 +349,14 @@ def test(base_env, ast: AST | list[AST]):
             for a in ast:
                 test(base_env, a)
         case _:
+            print()
             tc = TypeCheck()
-            print(ast)
+            print('Untyped source:\n', ast)
             try:
                 result = tc.infer(ast, base_env, set())
-                print(result)
-            except Exception as e:
-                print(e)
+                print('Typed result:\n', result)
+            except TypeCheckError as e:
+                print('Error:\n', e)
 
 
 if __name__ == "__main__":
@@ -349,12 +365,17 @@ if __name__ == "__main__":
         "true": BoolType,
         "false": BoolType,
         "*": Function(IntType, Function(IntType, IntType)),
-        "tuple2": Function(pair_type[0], Function(pair_type[1], pair_type)),
         "pair": Function(pair_type[0], Function(pair_type[1], pair_type)),
     }
 
-    x = Identifier("x")
+    for length in range(3, 10):
+        name = f'tuple{length}'
+        ty = TypeOperator("*", *typevars(length))
+        environment[name] = Function.make(ty.types, ty)
+
+    x, y, z = Identifier("x"), Identifier("y"), Identifier("z")
     pair = Identifier("pair")
+    tuple3, tuple4, tuple5, tuple6, tuple7, tuple8, tuple9 = Identifier("tuple3"), Identifier("tuple4"), Identifier("tuple5"), Identifier("tuple6"), Identifier("tuple7"), Identifier("tuple8"), Identifier("tuple9")
     lit5 = IntLit(5)
     lit3 = IntLit(3)
     true = BoolLit(True)
@@ -367,5 +388,7 @@ if __name__ == "__main__":
         # Should pass
         Lambda(x.name, pair(x(lit5), x(lit3))),
         Lambda(x.name, pair(x(true), x(false))),
+        # Should pass
+        Lambda(x.name, Lambda(y.name, tuple3(x(lit5), x(lit3), y(true)))),
     ]
-    test(environment, tests)
+    test(environment, tests[-1])
