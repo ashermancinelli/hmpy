@@ -2,23 +2,9 @@
 
 """
 
-Hindley Milner Type Checking
+match 1 with (= 1) => 1 | (= 2) => 2 | (λNone . True) => 0
 
-The AST types are a basic DSL for constructing ASTs that the type checker understands.
-
-This is entirely based on three resources: 
-
-1. This paper by Luca Cardelli: http://lucacardelli.name/Papers/BasicTypechecking.pdf
-2. This perl script by Nikita Borisov: https://web.archive.org/web/20050420002559/http://www.cs.berkeley.edu/~nikitab/courses/cs263/hm.pl
-3. This python script by Robert Smallshire: https://raw.githubusercontent.com/rob-smallshire/hindley-milner-python/refs/heads/master/inference.py
-
-The paper contains an implementation in modula2, and the perl/python scripts are rewrites of the
-modula2 code. At times I found either script to be more useful, but I most heavily referenced the modula2
-version.
-
-The script contains FileCheck directives, so piping the output of this script to FileCheck as seen
-in the RUN line at the top of the file will test the implementation, in case you want to add more
-test cases.
+match T1 with (T1 -> bool) -> T2 | (T1 -> bool) -> T3
 
 """
 
@@ -69,7 +55,8 @@ def logwrap(func):
 
 
 class AST:
-    pass
+    def __init__(self):
+        self.type = None
 
 class Apply(AST): ...
 
@@ -140,6 +127,13 @@ class Lambda(AST):
     def __str__(self):
         return f"(λ{self.param} . {self.body})"
 
+    def __call__(self, *args: AST):
+        app = Apply(self, args[0])
+        for arg in args[1:]:
+            app = Apply(app, arg)
+        return app
+
+
 class Apply(AST):
     def __init__(self, fn, arg):
         self.fn, self.arg = fn, arg
@@ -147,6 +141,35 @@ class Apply(AST):
     def __str__(self):
         return f"({self.fn} {self.arg})"
 
+class Match(AST):
+    def __init__(self, expr, *cases):
+        self.expr, self.cases = expr, cases
+
+    def __str__(self):
+        cases = ' | '.join(f'{case}' for case in self.cases)
+        return f"match {self.expr} with {cases}"
+
+class Case(AST):
+    def __init__(self, pattern, body):
+        self.pattern, self.body = pattern, body
+
+    def __str__(self):
+        return f"{self.pattern} => {self.body}"
+
+class WildcardCase(Case):
+    def __init__(self, body):
+        super().__init__(Lambda(x, true), body)
+
+    def __str__(self):
+        return f"_ => {self.body}"
+
+#type l = A | B of int | C of int * int;;
+class VariantDecl(AST):
+    def __init__(self, name, type_name_pairs):
+        self.name, self.type_name_pairs = name, type_name_pairs
+
+    def __str__(self):
+        return f"{self.name} = {', '.join(f'{t} = {n}' for t, n in self.type_name_pairs)}"
 
 class TypeOperator: ...
 
@@ -226,6 +249,7 @@ class Function(TypeOperator):
 
 IntType = TypeOperator("int")
 BoolType = TypeOperator("bool")
+NoneType = TypeOperator('None')
 
 
 class TypeCheck:
@@ -238,6 +262,12 @@ class TypeCheck:
 
     @logwrap
     def infer(self, ast, env, concrete_types: list[TypeExpr]) -> TypeVariable:
+        inferred_type = self._infer(ast, env, concrete_types)
+        ast.type = inferred_type
+        return inferred_type
+
+    @logwrap
+    def _infer(self, ast, env, concrete_types: list[TypeExpr]) -> TypeVariable:
         match ast:
             case Identifier(name=name):
                 if name.isnumeric():
@@ -268,6 +298,20 @@ class TypeCheck:
                 value_type = self.infer(value, E, C)
                 self.unify_type_expressions(new_type, value_type)
                 return self.infer(body, E, C)
+            case Match(expr=expr, cases=cases):
+                expr_type = TypeVariable()
+                concrete_types.add(expr_type)
+                inferred_expr_type = self.infer(expr, env, concrete_types)
+
+                self.unify_type_expressions(expr_type, inferred_expr_type)
+                match_result_type = TypeVariable()
+                for case in cases:
+                    # All patterns are T -> bool
+                    pattern_type = self.infer(case.pattern, env, concrete_types)
+                    self.unify_type_expressions(pattern_type, Function(expr_type, BoolType))
+                    body_type = self.infer(case.body, env, concrete_types)
+                    self.unify_type_expressions(match_result_type, body_type)
+                return match_result_type
             case _:
                 assert False
 
@@ -390,7 +434,7 @@ def test(base_env, ast: AST | list[AST]):
         case _:
             print()
             tc = TypeCheck()
-            print('Untyped source:', ast)
+            print(ast)
             try:
                 result = tc.infer(ast, base_env, set())
                 print('Typed result:', result)
@@ -399,17 +443,24 @@ def test(base_env, ast: AST | list[AST]):
 
 
 if __name__ == "__main__":
-    pair_type = TypeOperator("*", *typevars(2))
+    PairType = TypeOperator("*", *typevars(2))
     t1 = TypeVariable()
     environment = {
         "true": BoolType,
         "false": BoolType,
         "*": Function(IntType, Function(IntType, IntType)),
+        "+": Function(IntType, Function(IntType, IntType)),
         "-": Function(IntType, Function(IntType, IntType)),
-        "pair": Function(pair_type[0], Function(pair_type[1], pair_type)),
+        "pair": Function(PairType[0], Function(PairType[1], PairType)),
         "ite": Function(BoolType, Function(t1, Function(t1, t1))),
         "is_zero": Function(IntType, BoolType),
-        "decrement": Function(IntType, IntType),
+        "None": NoneType,
+        "=": Function(IntType, Function(IntType, BoolType)),
+        "!=": Function(IntType, Function(IntType, BoolType)),
+        "<": Function(IntType, Function(IntType, BoolType)),
+        "<=": Function(IntType, Function(IntType, BoolType)),
+        ">": Function(IntType, Function(IntType, BoolType)),
+        ">=": Function(IntType, Function(IntType, BoolType)),
     }
 
     for length in range(3, 10):
@@ -417,12 +468,31 @@ if __name__ == "__main__":
         ty = TypeOperator("*", *typevars(length))
         environment[name] = Function.make(ty.types, ty)
 
-    times, minus, ite, pair, is_zero, decrement = Identifier.make("*", "-", "ite", "pair", "is_zero", "decrement")
+    eq, ne, lt, le, gt, ge = Identifier.make("=", "!=", "<", "<=", ">", ">=")
+    times, minus, plus, ite, pair, is_zero, none = Identifier.make("*", "-", "+", "ite", "pair", "is_zero", "None")
     x, y, z = Identifier.make("x", "y", "z")
     tuple3, tuple4, tuple5, tuple6, tuple7, tuple8, tuple9 = [Identifier(f'tuple{i}') for i in range(3, 10)]
-    lit1, lit2, lit3, lit4, lit5 = IntLit(1), IntLit(2), IntLit(3), IntLit(4), IntLit(5)
+    lit0, lit1, lit2, lit3, lit4, lit5 = IntLit(0), IntLit(1), IntLit(2), IntLit(3), IntLit(4), IntLit(5)
     true, false = BoolLit(True), BoolLit(False)
     f, g, h, m, n = Identifier.make("f", "g", "h", "m", "n")
+    incr, decr = plus(x, lit1), minus(x, lit1)
+
+    A, B, C = Identifier.make("A", "B", "C")
+    identity = Identifier("identity")
+
+    l = VariantDecl("l", [
+        ('A', NoneType),
+        ('B', IntType),
+        ('C', TypeOperator("*", IntType, IntType)),
+    ])
+
+    def sema_variant_decl(vd: VariantDecl):
+        type_var = TypeOperator(vd.name)
+        for ctor, type_expr in vd.type_name_pairs:
+            ctor_type = Function(type_expr, type_var)
+            environment[ctor] = ctor_type
+
+    sema_variant_decl(l)
 
     tests = [
         Lambda(x.name, pair(x(lit5), x(true))),
@@ -458,5 +528,29 @@ if __name__ == "__main__":
         Letrec(f, Lambda(n, ite(is_zero(n), lit1, times(n, f(minus(n, lit1))))), f(lit5)),
         # CHECK: Typed result:
         # CHECK-SAME: int
+
+        Lambda(x, A(x)),
+        # CHECK: Typed result: (None -> l)
+
+        Lambda(x, B(x)),
+        # CHECK: Typed result: (int -> l)
+
+        Lambda(y, Lambda(x, C(pair(x, y)))),
+        # CHECK: Typed result: (int -> (int -> l))
+
+        Match(lit1, Case(eq(lit1), lit1), Case(eq(lit2), lit2), Case(Lambda(none, true), lit3)),
+        # CHECK: Typed result: int
+
+        Match(lit1, Case(eq(lit1), lit1), Case(eq(lit2), lit2), Case(Lambda(none, true), true)),
+        # CHECK: Error: Could not unify types: int bool
+
+        Let(f, Lambda(x, Match(x, Case(eq(lit1), lit1), Case(eq(lit2), lit2))), f(lit1)),
+        # CHECK: Typed result: int
+
+        Letrec(f, Lambda(x, Match(x, Case(gt(lit5), lit1), Case(Lambda(x, true), f(plus(x, lit1))))), f(lit1)),
+        # CHECK: Typed result: int
+
+        Let(identity, Lambda(x, x), identity(lit1)),
+        # CHECK: Typed result: int
     ]
     test(environment, tests)
