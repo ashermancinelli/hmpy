@@ -1,0 +1,1 @@
+set -o pipefail;set -x;{ { set +x; } 2>/dev/null && echo 'RUN: at line 1': 'python3 /Users/ashermancinelli/workspace/hm/test/test_1.py | FileCheck /Users/ashermancinelli/workspace/hm/test/test_1.py' >&2 && { set -x; } 2>/dev/null && {   python3 /Users/ashermancinelli/workspace/hm/test/test_1.py | FileCheck /Users/ashermancinelli/workspace/hm/test/test_1.py; }; }

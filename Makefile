@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := all
 
 all:
-	python3 main.py
+	python3 hm.py
 
 check:
-	python3 main.py | FileCheck main.py
+	lit test
