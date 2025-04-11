@@ -5,4 +5,4 @@ all:
 	python3 hm.py
 
 check:
-	lit test
+	lit -svv test

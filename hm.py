@@ -311,7 +311,6 @@ lit0, lit1, lit2, lit3, lit4, lit5 = IntLit(0), IntLit(1), IntLit(2), IntLit(3),
 true, false = BoolLit(True), BoolLit(False)
 f, g, h, m, n = Identifier.make("f", "g", "h", "m", "n")
 incr, decr = plus(x, lit1), minus(x, lit1)
-
 A, B, C = Identifier.make("A", "B", "C")
 identity = Identifier("identity")
 

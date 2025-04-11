@@ -13,6 +13,6 @@ def typecheck(asts: list[AST]):
         print(ast)
         try:
             result = typecheck.infer(ast, env, set())
-            print('Type: ', result)
+            print('Typed result: ', result)
         except TypeCheckError as e:
-            print(e)
+            print('Error: ', e)
