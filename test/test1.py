@@ -1,6 +1,8 @@
 # RUN: python3 %s | FileCheck %s
 from harness import *
 
+isa = Identifier("isa")
+l = Identifier("l")
 typecheck(
     [
         VariantDecl(
@@ -22,5 +24,17 @@ typecheck(
         # CHECK: Typed result: (int -> l)
         Lambda(y, Lambda(x, C(pair(x, y)))),
         # CHECK: Typed result: (int -> (int -> l))
-    ]
+        Lambda(
+            y,
+            Match(
+                B(y),
+                Case(isa, lit5),
+                Case(Lambda(x, true), lit0),
+            ),
+        ),
+        # CHECK: Typed result: (int -> int)
+    ],
+    {
+        "isa": Function(TypeVariable(), BoolType),
+    },
 )

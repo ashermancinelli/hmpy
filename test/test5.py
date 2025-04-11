@@ -7,7 +7,6 @@ typecheck(
             f, Lambda(x, Match(x, Case(eq(lit1), lit1), Case(eq(lit2), lit2))), f(lit1)
         ),
         # CHECK: Typed result: int
-
         Letrec(
             f,
             Lambda(
@@ -17,7 +16,6 @@ typecheck(
             f(lit1),
         ),
         # CHECK: Typed result: int
-
         Let(identity, Lambda(x, x), identity(lit1)),
         # CHECK: Typed result: int
     ]
