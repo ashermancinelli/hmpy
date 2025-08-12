@@ -1,19 +1,20 @@
 #!/usr/bin/env python
-from typing import Union
-from util import TypeCheckError, logwrap, log
+from typing import Iterable, Union
+
 from dsl import (
     AST,
     Apply,
+    BoolLit,
+    Case,
     Identifier,
     IntLit,
-    BoolLit,
     Lambda,
     Let,
     Letrec,
     Match,
-    Case,
     VariantDecl,
 )
+from util import TypeCheckError, log, logwrap
 
 TypeExpr = Union["TypeOperator", "TypeVariable"]
 
@@ -197,15 +198,14 @@ class TypeCheck:
 
     @logwrap
     def prune_type_expression(self, type_expression: TypeVariable) -> TypeExpr:
-        type_expression.instance = self.prune(type_expression.instance)
-        return (
-            type_expression.instance
-            if type_expression.instance is not None
-            else type_expression
-        )
+        if type_expression.instantiated():
+            assert type_expression.instance
+            ret = type_expression.instance = self.prune(type_expression.instance)
+            return ret
+        return type_expression
 
     @logwrap
-    def prune(self, type_expression: TypeExpr | None) -> TypeExpr | None:
+    def prune(self, type_expression: TypeExpr) -> TypeExpr:
         """
                 The function Prune is used whenever a type expression has to be inspected: it will always
         return a type expression which is either an uninstantiated type variable or a type operator; i.e. it
@@ -219,8 +219,6 @@ class TypeCheck:
                 return type_expression
             case TypeOperator():
                 return type_expression
-            case None:
-                return None
 
     @logwrap
     def is_concrete(self, expr: TypeExpr, concrete_type_exprs: set[TypeExpr]) -> bool:
@@ -232,7 +230,7 @@ class TypeCheck:
 
     @logwrap
     def is_sub_type_expression_of_any(
-        self, maybe_subexpr: TypeExpr, expr_iterable: set[TypeExpr]
+        self, maybe_subexpr: TypeExpr, expr_iterable: Iterable[TypeExpr]
     ) -> bool:
         return any(
             self.is_sub_type_expression_of(maybe_subexpr, member_type)
@@ -304,7 +302,7 @@ PairType = TypeOperator("*", *typevars(2))
 
 
 t1 = TypeVariable()
-default_environment = {
+default_environment: Env = {
     "true": BoolType,
     "false": BoolType,
     "*": Function(IntType, Function(IntType, IntType)),
@@ -350,7 +348,7 @@ A, B, C = Identifier.make("A", "B", "C")
 identity = Identifier("identity")
 
 if __name__ == "__main__":
-    tests = [
+    tests: list[AST] = [
         Lambda(x.name, pair(x(lit5), x(true))),
         # CHECK: Error: Could not unify types: bool int
         Lambda(x.name, pair(x(lit5), x(lit3))),
