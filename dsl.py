@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+import functools
 from type_expr import TypeExpr
 
 class AST:
@@ -52,16 +54,19 @@ class BoolLit(AST):
         return str(self.value)
 
 
+@dataclass
 class BinOp(AST):
-    def __init__(self, op, lhs, rhs):
-        super().__init__()
-        self.op = op
-        self.lhs: AST = lhs
-        self.rhs: AST = rhs
+    op: str
+    lhs: AST
+    rhs: AST
 
     def __str__(self):
-        return f"{self.lhs} {self.op} {self.rhs}"
+        return f"({self.lhs} {self.op} {self.rhs})"
 
+Add = functools.partial(BinOp, '+')
+Sub = functools.partial(BinOp, '-')
+Div = functools.partial(BinOp, '/')
+Mul = functools.partial(BinOp, '*')
 
 class Let(AST):
     def __init__(self, name: str | Identifier, value: AST, body: AST):

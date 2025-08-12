@@ -1,6 +1,7 @@
 import functools
+import os
 
-DEBUG = False
+DEBUG = os.getenv('DEBUG', None) is not None
 
 
 def log(*a, **kw):

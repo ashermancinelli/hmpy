@@ -5,6 +5,7 @@ from dsl import (
     AST,
     Apply,
     BoolLit,
+    BinOp,
     Case,
     Identifier,
     IntLit,
@@ -50,6 +51,11 @@ class TypeCheck:
                 return IntType
             case BoolLit():
                 return BoolType
+            case BinOp(_, lhs, rhs):
+                lhs_type = self.infer(lhs, env, concrete_types)
+                rhs_type = self.infer(rhs, env, concrete_types)
+                self.unify_type_expressions(lhs_type, rhs_type)
+                return lhs_type
             case Apply(fn=fn, arg=arg):
                 fun_type = self.infer(fn, env, concrete_types)
                 arg_type = self.infer(arg, env, concrete_types)
