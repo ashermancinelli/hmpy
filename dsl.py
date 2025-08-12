@@ -1,12 +1,18 @@
 
 class AST:
     def __init__(self):
-        self.type = None
+        self.type: 'TypeExpr | None' = None
 
-class Apply(AST): ...
+
+class Apply(AST):
+    def __init__(self, fn: AST, arg: AST):
+        self.fn, self.arg = fn, arg
+
+    def __str__(self):
+        return f"({self.fn} {self.arg})"
 
 class Identifier(AST):
-    def __init__(self, name):
+    def __init__(self, name: str):
         self.name = name
 
     def __call__(self, *args: AST):
@@ -77,14 +83,6 @@ class Lambda(AST):
         for arg in args[1:]:
             app = Apply(app, arg)
         return app
-
-
-class Apply(AST):
-    def __init__(self, fn, arg):
-        self.fn, self.arg = fn, arg
-
-    def __str__(self):
-        return f"({self.fn} {self.arg})"
 
 class Match(AST):
     def __init__(self, expr, *cases):
