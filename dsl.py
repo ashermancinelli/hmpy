@@ -1,3 +1,5 @@
+from type_expr import TypeExpr
+
 class AST:
     def __init__(self):
         self.type: "TypeExpr | None" = None
@@ -5,7 +7,8 @@ class AST:
 
 class Apply(AST):
     def __init__(self, fn: AST, arg: AST):
-        self.fn, self.arg = fn, arg
+        self.fn: AST = fn
+        self.arg: AST = arg
 
     def __str__(self):
         return f"({self.fn} {self.arg})"
@@ -22,7 +25,7 @@ class Identifier(AST):
         return app
 
     @staticmethod
-    def make(*args):
+    def make(*args: str):
         return map(Identifier, args)
 
     def __str__(self):
@@ -30,16 +33,16 @@ class Identifier(AST):
 
 
 class IntLit(AST):
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, value: int):
+        self.value: int = value
 
     def __str__(self):
         return str(self.value)
 
 
 class BoolLit(AST):
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, value: bool):
+        self.value: bool = value
 
     def __str__(self):
         return str(self.value)
@@ -56,7 +59,7 @@ class BinOp(AST):
 
 
 class Let(AST):
-    def __init__(self, name, value, body):
+    def __init__(self, name: str, value: AST, body: AST):
         self.name: str = name.name if isinstance(name, Identifier) else name
         self.value: AST = value
         self.body: AST = body
@@ -66,7 +69,7 @@ class Let(AST):
 
 
 class Letrec(AST):
-    def __init__(self, name, value, body):
+    def __init__(self, name: str, value: AST, body: AST):
         self.name: str = name.name if isinstance(name, Identifier) else name
         self.value: AST = value
         self.body: AST = body
@@ -90,18 +93,8 @@ class Lambda(AST):
         return app
 
 
-class Match(AST):
-    def __init__(self, expr: AST, *cases: AST):
-        self.expr: AST = expr
-        self.cases: list[AST] = list(cases)
-
-    def __str__(self):
-        cases = " | ".join(f"{case}" for case in self.cases)
-        return f"match {self.expr} with {cases}"
-
-
 class Case(AST):
-    def __init__(self, pattern, body):
+    def __init__(self, pattern: AST, body: AST):
         self.pattern: AST = pattern
         self.body: AST = body
 
@@ -109,8 +102,18 @@ class Case(AST):
         return f"{self.pattern} => {self.body}"
 
 
+class Match(AST):
+    def __init__(self, expr: AST, *cases: Case):
+        self.expr: AST = expr
+        self.cases: list[Case] = list(cases)
+
+    def __str__(self):
+        cases = " | ".join(f"{case}" for case in self.cases)
+        return f"match {self.expr} with {cases}"
+
+
 class WildcardCase(Case):
-    def __init__(self, body):
+    def __init__(self, body: AST):
         super().__init__(Lambda(Identifier("x"), BoolLit(True)), body)
 
     def __str__(self):
@@ -118,9 +121,9 @@ class WildcardCase(Case):
 
 
 class VariantDecl(AST):
-    def __init__(self, name, type_name_pairs: list[tuple[str, AST]]):
+    def __init__(self, name: str, type_name_pairs: list[tuple[str, TypeExpr]]):
         self.name: str = name
-        self.type_name_pairs: list[tuple[str, AST]] = type_name_pairs
+        self.type_name_pairs: list[tuple[str, TypeExpr]] = type_name_pairs
 
     def __str__(self):
         return f"type {self.name} = {' | '.join(f'{t} of {n}' for t, n in self.type_name_pairs)}"

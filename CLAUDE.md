@@ -1,0 +1,1 @@
+- never use emojis. be very brief and to-the-point.

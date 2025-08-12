@@ -85,7 +85,6 @@ class TypeCheck:
                 self.unify_type_expressions(expr_type, inferred_expr_type)
                 match_result_type = TypeVariable()
                 for case in cases:
-                    # All patterns are T -> bool
                     pattern_type = self.infer(case.pattern, env, concrete_types)
                     self.unify_type_expressions(
                         pattern_type, Function(expr_type, BoolType)
@@ -102,7 +101,7 @@ class TypeCheck:
                 assert False
 
     @logwrap
-    def typeof(self, name: str, env, concrete_types: set[TypeExpr]) -> TypeExpr:
+    def typeof(self, name: str, env: Env, concrete_types: set[TypeExpr]) -> TypeExpr:
         if val := env.get(name, None):
             return self.deep_copy_with_new_generic_typevars(val, concrete_types)
         raise TypeCheckError(f"Undefined symbol: {name}")
