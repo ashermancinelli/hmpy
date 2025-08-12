@@ -1,5 +1,5 @@
 # RUN: python3 %s | FileCheck %s
-from harness import *
+from hm.test.harness import *
 
 isa = Identifier("isa")
 l = Identifier("l")

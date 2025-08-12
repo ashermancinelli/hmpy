@@ -1,10 +1,11 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+# sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from ast import *
-from hm import *
+from hm.hm_ast import *
+from hm.type_expr import TypeOperator, TypeExpr, TypeVariable
+from hm.unify import TypeCheck, Env, TypeCheckError
 
 
 def typecheck(asts: list[AST], env: dict[str, TypeExpr] = dict()):

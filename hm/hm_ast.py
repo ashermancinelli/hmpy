@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import functools
-from type_expr import TypeExpr
+from hm.type_expr import TypeExpr
 
 class AST:
     def __init__(self):

@@ -1,8 +1,8 @@
 
 
-from typing import Union
+from typing import Iterable, Union
 
-from util import logwrap
+from hm.util import logwrap
 
 
 TypeExpr = Union["TypeOperator", "TypeVariable"]
@@ -16,6 +16,10 @@ class TypeVariable:
         TypeVariable._id += 1
         self.instance: TypeExpr | None = None
         self._name: str | None = None
+
+    @staticmethod
+    def make(how_many: int) -> Iterable['TypeVariable']:
+        return (TypeVariable() for _ in range(how_many))
 
     def id(self) -> int:
         return self._id

@@ -166,5 +166,5 @@ cython_debug/
 .DS_Store
 
 # Test output (lit testing framework)
-test/Output/*
+**/Output/*
 .lit_test_times.txt
