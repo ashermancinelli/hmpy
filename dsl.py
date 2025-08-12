@@ -2,11 +2,12 @@ from type_expr import TypeExpr
 
 class AST:
     def __init__(self):
-        self.type: "TypeExpr | None" = None
+        self.type: TypeExpr | None = None
 
 
 class Apply(AST):
     def __init__(self, fn: AST, arg: AST):
+        super().__init__()
         self.fn: AST = fn
         self.arg: AST = arg
 
@@ -16,6 +17,7 @@ class Apply(AST):
 
 class Identifier(AST):
     def __init__(self, name: str):
+        super().__init__()
         self.name: str = name
 
     def __call__(self, *args: AST):
@@ -34,6 +36,7 @@ class Identifier(AST):
 
 class IntLit(AST):
     def __init__(self, value: int):
+        super().__init__()
         self.value: int = value
 
     def __str__(self):
@@ -42,6 +45,7 @@ class IntLit(AST):
 
 class BoolLit(AST):
     def __init__(self, value: bool):
+        super().__init__()
         self.value: bool = value
 
     def __str__(self):
@@ -50,6 +54,7 @@ class BoolLit(AST):
 
 class BinOp(AST):
     def __init__(self, op, lhs, rhs):
+        super().__init__()
         self.op = op
         self.lhs: AST = lhs
         self.rhs: AST = rhs
@@ -59,7 +64,8 @@ class BinOp(AST):
 
 
 class Let(AST):
-    def __init__(self, name: str, value: AST, body: AST):
+    def __init__(self, name: str | Identifier, value: AST, body: AST):
+        super().__init__()
         self.name: str = name.name if isinstance(name, Identifier) else name
         self.value: AST = value
         self.body: AST = body
@@ -69,7 +75,8 @@ class Let(AST):
 
 
 class Letrec(AST):
-    def __init__(self, name: str, value: AST, body: AST):
+    def __init__(self, name: str | Identifier, value: AST, body: AST):
+        super().__init__()
         self.name: str = name.name if isinstance(name, Identifier) else name
         self.value: AST = value
         self.body: AST = body
@@ -80,6 +87,7 @@ class Letrec(AST):
 
 class Lambda(AST):
     def __init__(self, param: Identifier | str, body: AST):
+        super().__init__()
         self.param: str = param.name if isinstance(param, Identifier) else param
         self.body: AST = body
 
@@ -95,6 +103,7 @@ class Lambda(AST):
 
 class Case(AST):
     def __init__(self, pattern: AST, body: AST):
+        super().__init__()
         self.pattern: AST = pattern
         self.body: AST = body
 
@@ -104,6 +113,7 @@ class Case(AST):
 
 class Match(AST):
     def __init__(self, expr: AST, *cases: Case):
+        super().__init__()
         self.expr: AST = expr
         self.cases: list[Case] = list(cases)
 
@@ -122,6 +132,7 @@ class WildcardCase(Case):
 
 class VariantDecl(AST):
     def __init__(self, name: str, type_name_pairs: list[tuple[str, TypeExpr]]):
+        super().__init__()
         self.name: str = name
         self.type_name_pairs: list[tuple[str, TypeExpr]] = type_name_pairs
 

@@ -205,16 +205,13 @@ class TypeCheck:
                             )
                         for subtype1, subtype2 in zip(ts1, ts2):
                             self.unify_type_expressions(subtype1, subtype2)
-            case _:
-                print(expr1, expr2)
-                assert False
 
 
 def typevars(how_many: int):
     return [TypeVariable() for _ in range(how_many)]
 
 
-def test(base_env, ast: AST | list[AST]):
+def test(base_env: Env, ast: AST | list[AST]):
     match ast:
         case list():
             for a in ast:
