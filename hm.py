@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from typing import Iterable, Union
 
-from dsl import (
+from ast import (
     AST,
     Apply,
     BoolLit,
