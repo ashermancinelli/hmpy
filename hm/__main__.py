@@ -37,37 +37,6 @@ def test(base_env: Env, ast: AST | list[AST]):
                 print("Error:", e)
 
 
-PairType = TypeOperator("*", *typevars(2))
-
-
-t1 = TypeVariable()
-
-for length in range(3, 10):
-    name = f"tuple{length}"
-    ty = TypeOperator("*", *typevars(length))
-    default_environment[name] = Function.make(ty.types, ty)
-
-eq, ne, lt, le, gt, ge = Identifier.make("=", "!=", "<", "<=", ">", ">=")
-times, minus, plus, ite, pair, is_zero, none = Identifier.make(
-    "*", "-", "+", "ite", "pair", "is_zero", "None"
-)
-x, y, z = Identifier.make("x", "y", "z")
-tuple3, tuple4, tuple5, tuple6, tuple7, tuple8, tuple9 = [
-    Identifier(f"tuple{i}") for i in range(3, 10)
-]
-lit0, lit1, lit2, lit3, lit4, lit5 = (
-    IntLit(0),
-    IntLit(1),
-    IntLit(2),
-    IntLit(3),
-    IntLit(4),
-    IntLit(5),
-)
-true, false = BoolLit(True), BoolLit(False)
-f, g, h, m, n = Identifier.make("f", "g", "h", "m", "n")
-incr, decr = plus(x, lit1), minus(x, lit1)
-A, B, C = Identifier.make("A", "B", "C")
-identity = Identifier("identity")
 
 tests: list[AST] = [
     Lambda(x.name, pair(x(lit5), x(true))),

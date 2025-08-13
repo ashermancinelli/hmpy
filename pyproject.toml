@@ -9,3 +9,11 @@ dependencies = []
 [tool.pyright]
 reportMissingSuperCall = "none"
 reportImplicitOverride = "none"
+exclude = [
+  'lit.site.cfg'
+]
+
+[tool.ruff]
+exclude = [
+  'lit.site.cfg'
+]

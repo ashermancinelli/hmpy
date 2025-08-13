@@ -3,20 +3,17 @@ import os
 
 DEBUG = os.getenv('DEBUG', None) is not None
 
-
-def log(*a, **kw):
-    pass
-
 class TypeCheckError(Exception):
-    def __init__(self, message):
-        self.message = message
+    def __init__(self, message: str):
+        self.message: str = message
 
     def __str__(self):
         return self.message
 
+def log(*a, **kw):
+    pass
 
 if DEBUG:
-
     def log(*a, **kw):
         print(*a, **kw)
 
