@@ -1,5 +1,5 @@
 # RUN: python3 %s | FileCheck %s
-from harness import *
+from hm.test.harness import *
 
 typecheck(
     [

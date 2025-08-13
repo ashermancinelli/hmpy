@@ -1,27 +1,35 @@
-from hm.hm_ast import BoolLit, Identifier, IntLit
+from hm.hm_ast import (
+    BoolLit,
+    Identifier,
+    IntLit,
+    IntType,
+    BoolType,
+    FloatType,
+    NoneType,
+)
 from hm.type_expr import TypeOperator, TypeVariable, Function
-from hm.unify import BoolType, Env, IntType, NoneType
+from hm.unify import Env
 
 PairType = TypeOperator("*", *TypeVariable.make(2))
 
 t1 = TypeVariable()
 
 default_environment: Env = {
-    "true": BoolType,
-    "false": BoolType,
-    "*": Function(IntType, Function(IntType, IntType)),
-    "+": Function(IntType, Function(IntType, IntType)),
-    "-": Function(IntType, Function(IntType, IntType)),
+    "true": BoolType(),
+    "false": BoolType(),
+    "*": Function(IntType(), Function(IntType(), IntType())),
+    "+": Function(IntType(), Function(IntType(), IntType())),
+    "-": Function(IntType(), Function(IntType(), IntType())),
     "pair": Function(PairType[0], Function(PairType[1], PairType)),
-    "ite": Function(BoolType, Function(t1, Function(t1, t1))),
-    "is_zero": Function(IntType, BoolType),
-    "None": NoneType,
-    "=": Function(IntType, Function(IntType, BoolType)),
-    "!=": Function(IntType, Function(IntType, BoolType)),
-    "<": Function(IntType, Function(IntType, BoolType)),
-    "<=": Function(IntType, Function(IntType, BoolType)),
-    ">": Function(IntType, Function(IntType, BoolType)),
-    ">=": Function(IntType, Function(IntType, BoolType)),
+    "ite": Function(BoolType(), Function(t1, Function(t1, t1))),
+    "is_zero": Function(IntType(), BoolType()),
+    "None": NoneType(),
+    "=": Function(IntType(), Function(IntType(), BoolType())),
+    "!=": Function(IntType(), Function(IntType(), BoolType())),
+    "<": Function(IntType(), Function(IntType(), BoolType())),
+    "<=": Function(IntType(), Function(IntType(), BoolType())),
+    ">": Function(IntType(), Function(IntType(), BoolType())),
+    ">=": Function(IntType(), Function(IntType(), BoolType())),
 }
 
 for length in range(3, 10):

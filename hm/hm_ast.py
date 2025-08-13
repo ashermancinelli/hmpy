@@ -1,6 +1,9 @@
+from ast import TypeAlias
 from dataclasses import dataclass
 import functools
-from hm.type_expr import TypeExpr
+from typing import Any
+from hm.type_expr import TypeExpr, TypeOperator
+
 
 class AST:
     def __init__(self):
@@ -63,10 +66,12 @@ class BinOp(AST):
     def __str__(self):
         return f"({self.lhs} {self.op} {self.rhs})"
 
-Add = functools.partial(BinOp, '+')
-Sub = functools.partial(BinOp, '-')
-Div = functools.partial(BinOp, '/')
-Mul = functools.partial(BinOp, '*')
+
+Add = functools.partial(BinOp, "+")
+Sub = functools.partial(BinOp, "-")
+Div = functools.partial(BinOp, "/")
+Mul = functools.partial(BinOp, "*")
+
 
 class Let(AST):
     def __init__(self, name: str | Identifier, value: AST, body: AST):
@@ -143,3 +148,40 @@ class VariantDecl(AST):
 
     def __str__(self):
         return f"type {self.name} = {' | '.join(f'{t} of {n}' for t, n in self.type_name_pairs)}"
+
+
+@dataclass
+class VariantCase(AST):
+    name: str
+    value: "TypeRHS"
+
+
+@dataclass
+class Variant(AST):
+    variants: tuple[VariantCase]
+
+
+class IntType(TypeOperator):
+    def __init__(self):
+        super().__init__("int")
+
+class BoolType(TypeOperator):
+    def __init__(self):
+        super().__init__("bool")
+
+class FloatType(TypeOperator):
+    def __init__(self):
+        super().__init__("float")
+
+class NoneType(TypeOperator):
+    def __init__(self):
+        super().__init__("none")
+
+ScalarType = BoolType | IntType | FloatType | NoneType
+TypeRHS = Variant | ScalarType
+
+
+@dataclass
+class Type(AST):
+    name: str
+    value: TypeRHS

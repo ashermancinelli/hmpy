@@ -13,15 +13,15 @@ from hm.hm_ast import (
     Letrec,
     Match,
     VariantDecl,
+    BoolType,
+    IntType,
+    FloatType,
+    NoneType,
 )
 from hm.util import TypeCheckError, log, logwrap
 
 from hm.type_expr import TypeExpr, TypeVariable, TypeOperator, Function
 
-
-IntType = TypeOperator("int")
-BoolType = TypeOperator("bool")
-NoneType = TypeOperator("None")
 Env = dict[str, TypeExpr]
 
 
@@ -47,10 +47,11 @@ class TypeCheck:
                     return self.infer(IntLit(int(name)), env, concrete_types)
                 return self.typeof(name, env, concrete_types)
             case IntLit():
-                return IntType
+                return IntType()
             case BoolLit():
-                return BoolType
+                return BoolType()
             case BinOp(_, lhs, rhs):
+                # TODO: type promotion rules
                 lhs_type = self.infer(lhs, env, concrete_types)
                 rhs_type = self.infer(rhs, env, concrete_types)
                 self.unify_type_expressions(lhs_type, rhs_type)
@@ -92,7 +93,7 @@ class TypeCheck:
                 for case in cases:
                     pattern_type = self.infer(case.pattern, env, concrete_types)
                     self.unify_type_expressions(
-                        pattern_type, Function(expr_type, BoolType)
+                        pattern_type, Function(expr_type, BoolType())
                     )
                     body_type = self.infer(case.body, env, concrete_types)
                     self.unify_type_expressions(match_result_type, body_type)

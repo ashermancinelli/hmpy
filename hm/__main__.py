@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # RUN: python %s | FileCheck %s
-from hm.test import default_environment
+from hm.test import *
 from hm.type_expr import TypeOperator, TypeVariable, Function
-from hm.unify import BoolType, Env, IntType, NoneType, TypeCheck
+from hm.unify import Env, TypeCheck
 from hm.util import TypeCheckError
 from hm.hm_ast import (
     AST,
@@ -14,6 +14,9 @@ from hm.hm_ast import (
     Letrec,
     Match,
     Case,
+    IntType,
+    BoolType,
+    NoneType,
 )
 
 

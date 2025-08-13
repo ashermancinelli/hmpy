@@ -46,7 +46,7 @@ class TypeVariable:
 
 
 class TypeOperator:
-    def __init__(self, name, *types: TypeExpr):
+    def __init__(self, name: str, *types: TypeExpr):
         self.name: str = name
         self.types: list[TypeExpr] = list(types)
 

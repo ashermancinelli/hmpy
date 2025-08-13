@@ -8,9 +8,9 @@ typecheck(
         VariantDecl(
             "l",
             [
-                ("A", NoneType),
-                ("B", IntType),
-                ("C", TypeOperator("*", IntType, IntType)),
+                ("A", NoneType()),
+                ("B", IntType()),
+                ("C", TypeOperator("*", IntType(), IntType())),
             ],
         ),
         # CHECK: Typed result: l
@@ -19,7 +19,7 @@ typecheck(
         Lambda(x, B(x(lit5))),
         # CHECK: Typed result: ((int -> int) -> l)
         Lambda(x, A(x)),
-        # CHECK: Typed result: (None -> l)
+        # CHECK: Typed result: (none -> l)
         Lambda(x, B(x)),
         # CHECK: Typed result: (int -> l)
         Lambda(y, Lambda(x, C(pair(x, y)))),
@@ -35,6 +35,6 @@ typecheck(
         # CHECK: Typed result: (int -> int)
     ],
     {
-        "isa": Function(TypeVariable(), BoolType),
+        "isa": Function(TypeVariable(), BoolType()),
     },
 )

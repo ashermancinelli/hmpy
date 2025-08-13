@@ -1,16 +1,13 @@
-import os
-import sys
-
 from hm.test import *
 from hm.hm_ast import *
 from hm.type_expr import TypeOperator, TypeExpr, TypeVariable
 from hm.unify import TypeCheck, Env, TypeCheckError
 
 
-def typecheck(asts: list[AST], env: dict[str, TypeExpr] = dict()):
+def typecheck(asts: list[AST], env: dict[str, TypeExpr] | None = None):
     typecheck = TypeCheck()
     result = None
-    env = default_environment.copy() | env
+    env = default_environment.copy() | (env if env else dict())
     for ast in asts:
         print(ast)
         try:
